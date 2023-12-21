@@ -27,7 +27,6 @@ if __name__ == "__main__":
             print(l.tokens)
 
             ast = p.parse(l.tokens)
-            print(ast)
 
             l.reset()
             p.reset()

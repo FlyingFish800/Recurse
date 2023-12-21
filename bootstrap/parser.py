@@ -4,6 +4,7 @@ class node:
     def __init__(self):
         pass
 
+# Binary operation
 class binary(node):
     def __init__(self, left, op, right):
         super().__init__()
@@ -11,18 +12,54 @@ class binary(node):
         self.op = op
         self.right = right
 
+    # Evaluate in interpreter mode
+    def interpret(self):
+        if self.op.type == lexer.lexemeType.MINUS:
+            return self.left.interpret() - self.right.interpret()
+        elif self.op.type == lexer.lexemeType.PLUS:
+            return self.left.interpret() + self.right.interpret()
+        elif self.op.type == lexer.lexemeType.STAR:
+            return self.left.interpret() * self.right.interpret()
+        elif self.op.type == lexer.lexemeType.SLASH:
+            return self.left.interpret() + self.right.interpret()
+        elif self.op.type == lexer.lexemeType.EQUAL_EQUAL:
+            return (int) (self.left.interpret() == self.right.interpret())
+        elif self.op.type == lexer.lexemeType.BANG_EQUAL:
+            return (int) (self.left.interpret() != self.right.interpret())
+        elif self.op.type == lexer.lexemeType.GT_EQUAL:
+            return (int) (self.left.interpret() >= self.right.interpret())
+        elif self.op.type == lexer.lexemeType.LT_EQUAL:
+            return (int) (self.left.interpret() <= self.right.interpret())
+        elif self.op.type == lexer.lexemeType.GT:
+            return (int) (self.left.interpret() > self.right.interpret())
+        elif self.op.type == lexer.lexemeType.LT:
+            return (int) (self.left.interpret() < self.right.interpret())
+        else: 
+            print(f"ERROR: Unimplemented unary operation {self.op}")
+            exit(1)
+
     def __str__(self):
         return f"({self.left} {self.op} {self.right})"
     
     def __repr__(self):
         return str(self)
 
-
+# Unary operations
 class unary(node):
     def __init__(self, op, right):
         super().__init__()
         self.op = op
         self.right = right
+
+    # Evaluate in interpreter mode
+    def interpret(self):
+        if self.op.type == lexer.lexemeType.MINUS:
+            return -self.right.interpret()
+        elif self.op.type == lexer.lexemeType.BANG:
+            return not self.right.interpret()
+        else: 
+            print(f"ERROR: Unimplemented unary operation {self.op}")
+            exit(1)
 
     def __str__(self):
         return f"({self.op} {self.right})"
@@ -30,10 +67,15 @@ class unary(node):
     def __repr__(self):
         return str(self)
 
+# Number literals
 class number(node):
     def __init__(self, val):
         super().__init__()
         self.val = val
+
+    # Evaluate in interpreter mode
+    def interpret(self):
+        return self.val
 
     def __str__(self):
         return f"{self.val}"
@@ -41,10 +83,16 @@ class number(node):
     def __repr__(self):
         return str(self)
 
+# Variables or function names
 class identifier(node):
     def __init__(self, val):
         super().__init__()
         self.val = val
+
+    # Evaluate in interpreter mode
+    def interpret(self):
+        print("TODO: Eval identifiers")
+        exit(1)
 
     def __str__(self):
         return f"{self.val}"
@@ -144,7 +192,7 @@ class parser:
             return number(self.previous().value)
 
         if self.match((lexer.lexemeType.IDENTIFIER)):
-            return number(self.previous().value)
+            return identifier(self.previous().value)
 
         if self.match((lexer.lexemeType.PAREN_L)):
             epxression = self.expression()
@@ -162,7 +210,9 @@ class parser:
         self.tokens = tokens
 
         while not self.done():
-            print(self.expression())
+            exp = self.expression()
+            print(exp)
+            print(exp.interpret())
 
     # Reset state of parser
     def reset(self):
