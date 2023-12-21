@@ -13,27 +13,27 @@ class binary(node):
         self.right = right
 
     # Evaluate in interpreter mode
-    def interpret(self):
+    def interpret(self, i):
         if self.op.type == lexer.lexemeType.MINUS:
-            return self.left.interpret() - self.right.interpret()
+            return self.left.interpret(i) - self.right.interpret(i)
         elif self.op.type == lexer.lexemeType.PLUS:
-            return self.left.interpret() + self.right.interpret()
+            return self.left.interpret(i) + self.right.interpret(i)
         elif self.op.type == lexer.lexemeType.STAR:
-            return self.left.interpret() * self.right.interpret()
+            return self.left.interpret(i) * self.right.interpret(i)
         elif self.op.type == lexer.lexemeType.SLASH:
-            return self.left.interpret() + self.right.interpret()
+            return self.left.interpret(i) + self.right.interpret(i)
         elif self.op.type == lexer.lexemeType.EQUAL_EQUAL:
-            return (int) (self.left.interpret() == self.right.interpret())
+            return (int) (self.left.interpret(i) == self.right.interpret(i))
         elif self.op.type == lexer.lexemeType.BANG_EQUAL:
-            return (int) (self.left.interpret() != self.right.interpret())
+            return (int) (self.left.interpret(i) != self.right.interpret(i))
         elif self.op.type == lexer.lexemeType.GT_EQUAL:
-            return (int) (self.left.interpret() >= self.right.interpret())
+            return (int) (self.left.interpret(i) >= self.right.interpret(i))
         elif self.op.type == lexer.lexemeType.LT_EQUAL:
-            return (int) (self.left.interpret() <= self.right.interpret())
+            return (int) (self.left.interpret(i) <= self.right.interpret(i))
         elif self.op.type == lexer.lexemeType.GT:
-            return (int) (self.left.interpret() > self.right.interpret())
+            return (int) (self.left.interpret(i) > self.right.interpret(i))
         elif self.op.type == lexer.lexemeType.LT:
-            return (int) (self.left.interpret() < self.right.interpret())
+            return (int) (self.left.interpret(i) < self.right.interpret(i))
         else: 
             print(f"ERROR: Unimplemented unary operation {self.op}")
             exit(1)
@@ -52,11 +52,11 @@ class unary(node):
         self.right = right
 
     # Evaluate in interpreter mode
-    def interpret(self):
+    def interpret(self, i):
         if self.op.type == lexer.lexemeType.MINUS:
-            return -self.right.interpret()
+            return -self.right.interpret(i)
         elif self.op.type == lexer.lexemeType.BANG:
-            return not self.right.interpret()
+            return not self.right.interpret(i)
         else: 
             print(f"ERROR: Unimplemented unary operation {self.op}")
             exit(1)
@@ -74,7 +74,7 @@ class number(node):
         self.val = val
 
     # Evaluate in interpreter mode
-    def interpret(self):
+    def interpret(self, i):
         return self.val
 
     def __str__(self):
@@ -90,12 +90,51 @@ class identifier(node):
         self.val = val
 
     # Evaluate in interpreter mode
-    def interpret(self):
-        print("TODO: Eval identifiers")
-        exit(1)
+    def interpret(self, i):
+        return i.reference(self.val)
 
     def __str__(self):
         return f"{self.val}"
+    
+    def __repr__(self):
+        return str(self)
+    
+# Assignment of variable
+class assignment(node):
+    def __init__(self, name, val):
+        super().__init__()
+        self.name = name
+        self.val = val
+
+    # Evaluate in interpreter mode
+    def interpret(self, i):
+        value = self.val.interpret(i)
+        i.assignment(self.name, value)
+        return value
+
+    def __str__(self):
+        return f"{self.name} = {self.val}"
+    
+    def __repr__(self):
+        return str(self)
+    
+# If statement
+class if_stmt(node):
+    def __init__(self, cond, body):
+        super().__init__()
+        self.cond = cond
+        self.body = body
+
+    # Evaluate in interpreter mode
+    def interpret(self, i):
+        condition = self.cond.interpret(i)
+        if condition:
+            for line in self.body:
+                line.interpret(i)
+
+    def __str__(self):
+        nl = "\n"
+        return f"if {self.cond} : {nl.join(self.body)} ;"
     
     def __repr__(self):
         return str(self)
@@ -125,6 +164,12 @@ class parser:
                     return True
             
         return False
+    
+    # Check value of next token
+    def peek(self, to_match):
+        if self.current + 1 < len(self.tokens): return False
+        return to_match == self.tokens[self.current + 1].type
+
     
     # Look at the previously consumed token
     def previous(self):
@@ -203,16 +248,54 @@ class parser:
             
             return epxression
         
-        
+    # A line of recurse
+    def statement(self):
+        if self.done():
+            print("ERROR: No more tokens")
+            exit(1)
+
+        # Assignment
+        if self.match((lexer.lexemeType.IDENTIFIER)):
+            left = identifier(self.previous().value)
+            if self.match((lexer.lexemeType.EQUAL)):
+                op = self.previous()
+                right = self.statement()
+                return assignment(left.val, right)
+            else: 
+                # Go back if not assignment
+                self.current -= 1
+
+        # If statement
+        if self.match((lexer.lexemeType.IF)):
+            cond = self.expression()
+
+            if self.done():
+                print("ERROR: Missing body of if statement")
+                exit(1)
+
+            if not self.match((lexer.lexemeType.COLON)):
+                print("ERROR: No colon")
+
+            body = []
+            while not self.match((lexer.lexemeType.SEMICOLON)) and not self.done():
+                body.append(self.statement())
+
+            return if_stmt(cond, body)
+                
+
+        return self.expression()
+         
 
     # Parse the tokens and generate AST
     def parse(self, tokens):
         self.tokens = tokens
 
+        statements = []
+
         while not self.done():
-            exp = self.expression()
-            print(exp)
-            print(exp.interpret())
+            statements.append(self.statement())
+
+        return statements
 
     # Reset state of parser
     def reset(self):

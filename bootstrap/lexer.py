@@ -2,6 +2,7 @@ from enum import Enum, auto
 
 # Token type
 class lexemeType(Enum):
+    # Single char
     PLUS = auto()
     MINUS = auto()
     PAREN_L = auto()
@@ -15,16 +16,22 @@ class lexemeType(Enum):
     GT = auto()
     LT = auto()
 
+    # Two char
     EQUAL_EQUAL = auto()
     BANG_EQUAL = auto()
     LT_EQUAL = auto()
     GT_EQUAL = auto()
 
+    # Keywords
+    IF = auto()
+
+    # Unique
     NUMBER = auto()
     IDENTIFIER = auto()
 
 singletLexemeDict = {lexemeType.PLUS:"+", lexemeType.MINUS:"-", lexemeType.PAREN_L:"(", lexemeType.PAREN_R:")", lexemeType.STAR:"*", lexemeType.SLASH:"/", lexemeType.COLON:":", lexemeType.SEMICOLON:";", lexemeType.BANG:"!", lexemeType.EQUAL:"=", lexemeType.LT:"<", lexemeType.GT:">"}
 doubletLexemeDict = {lexemeType.EQUAL_EQUAL:"==", lexemeType.BANG_EQUAL:"!=", lexemeType.LT_EQUAL:"<=", lexemeType.GT_EQUAL:">="}
+keywordLexemeDict = {lexemeType.IF:"if"}
 
 # Each token, has a type and value
 class lexeme:
@@ -43,6 +50,9 @@ class lexeme:
         if char != None: return f"{char}"
 
         char = doubletLexemeDict.get(self.type)
+        if char != None: return f"{char}"
+
+        char = keywordLexemeDict.get(self.type)
         if char != None: return f"{char}"
         
         return f"{self.value}"
@@ -104,7 +114,6 @@ class lexer:
             next_char = self.getc(line)
             for item in doubletLexemeDict.items():
                 seq = item[1]
-                print(seq)
                 if seq[0] == char and seq[1] == next_char:
                     return lexeme(item[0])
 
@@ -135,19 +144,26 @@ class lexer:
                 if self.done(line) or (not self.peek(line).isalpha() and not self.peek(line) == "_"): break
                 char = self.getc(line)
 
-            # TODO:
+            id = "".join(id)
+
             # Check for keywords here!
+            for type, keyword in keywordLexemeDict.items():
+                if id == keyword:
+                    return lexeme(type)
+            
                 
             # NOTE:
             # afadfs?adffa? gets turned into [afadfs, ?adffa, ?] idk why
-
-            return lexeme(lexemeType.IDENTIFIER, "".join(id))
+            return lexeme(lexemeType.IDENTIFIER, id)
 
         
 
 
     # Turn a line of code into a string of tokens
     def tokenize(self, line):
+        self.current = 0
+        self.line += 1
+
         # While chars left in string, tokenize it
         while self.current < len(line):
             self.start_current = self.current
