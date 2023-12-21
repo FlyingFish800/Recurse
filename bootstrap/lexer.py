@@ -15,6 +15,7 @@ class lexemeType(Enum):
     EQUAL = auto()
     GT = auto()
     LT = auto()
+    COMMA = auto()
 
     # Two char
     EQUAL_EQUAL = auto()
@@ -24,23 +25,27 @@ class lexemeType(Enum):
 
     # Keywords
     IF = auto()
+    FUN = auto()
+    RET = auto()
 
     # Unique
     NUMBER = auto()
     IDENTIFIER = auto()
 
-singletLexemeDict = {lexemeType.PLUS:"+", lexemeType.MINUS:"-", lexemeType.PAREN_L:"(", lexemeType.PAREN_R:")", lexemeType.STAR:"*", lexemeType.SLASH:"/", lexemeType.COLON:":", lexemeType.SEMICOLON:";", lexemeType.BANG:"!", lexemeType.EQUAL:"=", lexemeType.LT:"<", lexemeType.GT:">"}
+singletLexemeDict = {lexemeType.COMMA:",", lexemeType.PLUS:"+", lexemeType.MINUS:"-", lexemeType.PAREN_L:"(", lexemeType.PAREN_R:")", lexemeType.STAR:"*", lexemeType.SLASH:"/", lexemeType.COLON:":", lexemeType.SEMICOLON:";", lexemeType.BANG:"!", lexemeType.EQUAL:"=", lexemeType.LT:"<", lexemeType.GT:">"}
 doubletLexemeDict = {lexemeType.EQUAL_EQUAL:"==", lexemeType.BANG_EQUAL:"!=", lexemeType.LT_EQUAL:"<=", lexemeType.GT_EQUAL:">="}
-keywordLexemeDict = {lexemeType.IF:"if"}
+keywordLexemeDict = {lexemeType.IF:"if", lexemeType.FUN:"fun", lexemeType.RET:"ret"}
 
 # Each token, has a type and value
 class lexeme:
     type : lexemeType = None
     value = None
+    line = 0
 
-    def __init__(self, type : lexemeType, value = None):
+    def __init__(self, line, type : lexemeType, value = None):
         self.type = type
         self.value = value
+        self.line = line
 
     def __repr__(self) -> str:
         return str(self)
@@ -62,7 +67,7 @@ class lexeme:
 class lexer:
     # Current char in line, and line num
     current = 0
-    line = 1
+    line = 0
 
     # Tokenized tokens
     tokens = []
@@ -109,18 +114,20 @@ class lexer:
 
         # Try to handle as double char first
         char = self.getc(line)
+        while char in (" ", "\t"):
+            char = self.getc(line)
 
         if not self.done(line) and self.isDoublet(char, self.peek(line)):
             next_char = self.getc(line)
             for item in doubletLexemeDict.items():
                 seq = item[1]
                 if seq[0] == char and seq[1] == next_char:
-                    return lexeme(item[0])
+                    return lexeme(self.line, item[0])
 
         if self.isSinglet(char):
             for item in singletLexemeDict.items():
                 if item[1] == char:
-                    return lexeme(item[0])
+                    return lexeme(self.line, item[0])
         
         # Otherwise handle multi-char token
 
@@ -133,7 +140,7 @@ class lexer:
                 if self.done(line) or not self.peek(line).isnumeric(): break
                 char = self.getc(line)
 
-            return lexeme(lexemeType.NUMBER, int("".join(number)))
+            return lexeme(self.line, lexemeType.NUMBER, int("".join(number)))
         
         else:
             # Otherwise it must be identifier
@@ -149,12 +156,13 @@ class lexer:
             # Check for keywords here!
             for type, keyword in keywordLexemeDict.items():
                 if id == keyword:
-                    return lexeme(type)
+                    return lexeme(self.line, type)
             
+            if id == " ": return
                 
             # NOTE:
             # afadfs?adffa? gets turned into [afadfs, ?adffa, ?] idk why
-            return lexeme(lexemeType.IDENTIFIER, id)
+            return lexeme(self.line, lexemeType.IDENTIFIER, id)
 
         
 
@@ -167,7 +175,9 @@ class lexer:
         # While chars left in string, tokenize it
         while self.current < len(line):
             self.start_current = self.current
-            self.tokens.append(self.getToken(line))
+            
+            tok = self.getToken(line)
+            if tok != None: self.tokens.append(tok)
 
     # After done tokenizing a line reset
     def reset(self):

@@ -19,6 +19,8 @@ fun function_name arg1, arg2, arg3:
     c = a + b
 ;
 
+glob for global?
+
 int = {digit}+
 id = char{char | "_"}
 

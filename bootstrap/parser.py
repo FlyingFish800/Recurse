@@ -1,13 +1,14 @@
 import lexer
 
 class node:
-    def __init__(self):
-        pass
+    line = 0
+    def __init__(self, line):
+        self.line = line
 
 # Binary operation
 class binary(node):
-    def __init__(self, left, op, right):
-        super().__init__()
+    def __init__(self, line, left, op, right):
+        super().__init__(line)
         self.left = left
         self.op = op
         self.right = right
@@ -46,8 +47,8 @@ class binary(node):
 
 # Unary operations
 class unary(node):
-    def __init__(self, op, right):
-        super().__init__()
+    def __init__(self, line, op, right):
+        super().__init__(line)
         self.op = op
         self.right = right
 
@@ -69,8 +70,8 @@ class unary(node):
 
 # Number literals
 class number(node):
-    def __init__(self, val):
-        super().__init__()
+    def __init__(self, line, val):
+        super().__init__(line)
         self.val = val
 
     # Evaluate in interpreter mode
@@ -85,13 +86,13 @@ class number(node):
 
 # Variables or function names
 class identifier(node):
-    def __init__(self, val):
-        super().__init__()
+    def __init__(self, line, val):
+        super().__init__(line)
         self.val = val
 
     # Evaluate in interpreter mode
     def interpret(self, i):
-        return i.reference(self.val)
+        return i.reference(self.val, self.line)
 
     def __str__(self):
         return f"{self.val}"
@@ -101,8 +102,8 @@ class identifier(node):
     
 # Assignment of variable
 class assignment(node):
-    def __init__(self, name, val):
-        super().__init__()
+    def __init__(self, line, name, val):
+        super().__init__(line)
         self.name = name
         self.val = val
 
@@ -120,8 +121,8 @@ class assignment(node):
     
 # If statement
 class if_stmt(node):
-    def __init__(self, cond, body):
-        super().__init__()
+    def __init__(self, line, cond, body):
+        super().__init__(line)
         self.cond = cond
         self.body = body
 
@@ -134,7 +135,63 @@ class if_stmt(node):
 
     def __str__(self):
         nl = "\n"
-        return f"if {self.cond} : {nl.join(self.body)} ;"
+        return f"if {self.cond} : \n{nl.join(self.body)} \n;"
+    
+    def __repr__(self):
+        return str(self)
+    
+# Function declaration
+class fun_declaration(node):
+    def __init__(self, line, name, args, body):
+        super().__init__(line)
+        self.name = name
+        self.args = args
+        self.body = body
+
+    # Evaluate in interpreter mode
+    def interpret(self, i):
+        i.declare_fun(self.name, self.args, self.body)
+
+    def __str__(self):
+        nl = "\n"
+        return f"fun {self.cond} : \n{nl.join(self.body)} \n;"
+    
+    def __repr__(self):
+        return str(self)
+    
+# Function call
+class fun_call(node):
+    def __init__(self, line, name, args):
+        super().__init__(line)
+        self.name = name
+        self.args = args
+
+    # Evaluate in interpreter mode
+    # Note that this ends up 
+    def interpret(self, i):
+        i.invoke_fun(self.name, self.args)
+
+    def __str__(self):
+        nl = "\n"
+        return f"{self.name}({', '.join(list(map(lambda x:str(x), self.args)))})"
+    
+    def __repr__(self):
+        return str(self)
+    
+# Return from a function
+class fun_ret(node):
+    def __init__(self, line, val):
+        super().__init__(line)
+        self.val = val
+
+    # Evaluate in interpreter mode
+    def interpret(self, i):
+        print(str(self))
+        print("TODO: Function returns")
+        exit(1)
+
+    def __str__(self):
+        return f"ret {self.val}"
     
     def __repr__(self):
         return str(self)
@@ -167,8 +224,8 @@ class parser:
     
     # Check value of next token
     def peek(self, to_match):
-        if self.current + 1 < len(self.tokens): return False
-        return to_match == self.tokens[self.current + 1].type
+        if self.current < len(self.tokens): return False
+        return to_match == self.tokens[self.current].type
 
     
     # Look at the previously consumed token
@@ -182,7 +239,7 @@ class parser:
         while not self.done() and self.match((lexer.lexemeType.BANG_EQUAL, lexer.lexemeType.EQUAL_EQUAL, lexer.lexemeType.GT_EQUAL, lexer.lexemeType.LT_EQUAL)):
             op = self.previous()
             right = self.comparison()
-            left = binary(left, op, right)
+            left = binary(self.previous().line, left, op, right)
 
         return left
     
@@ -193,7 +250,7 @@ class parser:
         while not self.done() and self.match((lexer.lexemeType.GT, lexer.lexemeType.LT, lexer.lexemeType.GT_EQUAL, lexer.lexemeType.LT_EQUAL)):
             op = self.previous()
             right = self.term()
-            left = binary(left, op, right)
+            left = binary(self.previous().line, left, op, right)
 
         return left
     
@@ -204,7 +261,7 @@ class parser:
         while not self.done() and self.match((lexer.lexemeType.PLUS, lexer.lexemeType.MINUS)):
             op = self.previous()
             right = self.factor()
-            left = binary(left, op, right)
+            left = binary(self.previous().line, left, op, right)
 
         return left
     
@@ -215,7 +272,7 @@ class parser:
         while not self.done() and self.match((lexer.lexemeType.STAR, lexer.lexemeType.SLASH)):
             op = self.previous()
             right = self.unary()
-            left = binary(left, op, right)
+            left = binary(self.previous().line, left, op, right)
 
         return left
     
@@ -224,7 +281,7 @@ class parser:
         if not self.done() and self.match((lexer.lexemeType.MINUS, lexer.lexemeType.BANG)):
             op = self.previous()
             right = self.unary()
-            return unary(op, right)
+            return unary(self.previous().line, op, right)
 
         return self.primary()
     
@@ -234,10 +291,24 @@ class parser:
             print("ERROR: Ran out of tokens")
 
         if self.match((lexer.lexemeType.NUMBER)):
-            return number(self.previous().value)
+            return number(self.previous().line, self.previous().value)
 
         if self.match((lexer.lexemeType.IDENTIFIER)):
-            return identifier(self.previous().value)
+            name = self.previous().value
+
+            if self.match((lexer.lexemeType.PAREN_L)):
+                args = []
+                while not self.match((lexer.lexemeType.PAREN_R)):
+                    args.append(self.comparison())
+                    if self.match((lexer.lexemeType.PAREN_R)): break
+                    elif self.match((lexer.lexemeType.COMMA)): continue
+                    else:
+                        print("ERROR: Incorrect syntax in function call")
+                        exit(1)
+
+                return fun_call(self.previous().line, name, args)
+            
+            return identifier(self.previous().line, name)
 
         if self.match((lexer.lexemeType.PAREN_L)):
             epxression = self.expression()
@@ -256,11 +327,11 @@ class parser:
 
         # Assignment
         if self.match((lexer.lexemeType.IDENTIFIER)):
-            left = identifier(self.previous().value)
+            left = identifier(self.previous().line, self.previous().value)
             if self.match((lexer.lexemeType.EQUAL)):
                 op = self.previous()
                 right = self.statement()
-                return assignment(left.val, right)
+                return assignment(self.previous().line, left.val, right)
             else: 
                 # Go back if not assignment
                 self.current -= 1
@@ -280,9 +351,48 @@ class parser:
             while not self.match((lexer.lexemeType.SEMICOLON)) and not self.done():
                 body.append(self.statement())
 
-            return if_stmt(cond, body)
-                
+            return if_stmt(self.previous().line, cond, body)
 
+        # Function declaration
+        if self.match((lexer.lexemeType.FUN)):
+            if not self.match((lexer.lexemeType.IDENTIFIER)):
+                print("ERROR: Function name required")
+                exit(1)
+
+            name = self.previous()
+            args = []
+
+            # Get args if they exist
+            while not self.match((lexer.lexemeType.COLON)):
+                if not self.match((lexer.lexemeType.IDENTIFIER)):
+                    print("ERROR: Function args must be identifiers")
+                    exit(1)
+                
+                args.append(self.previous().value)
+
+                if self.match((lexer.lexemeType.COMMA)):
+                    continue
+                elif self.match((lexer.lexemeType.COLON)):
+                    break
+                else:
+                    print("ERROR: Incorrect format for function declaration args")
+                    exit(1)
+
+            # Get function body
+            body = []
+            while not self.match((lexer.lexemeType.SEMICOLON)) and not self.done():
+                body.append(self.statement())
+                
+            return fun_declaration(name.line, name.value, args, body)
+        
+        # Function return
+        if self.match((lexer.lexemeType.RET)):
+            # If last token or next token is on different line, return 
+            if self.done() or self.tokens[self.current].line != self.previous().line:
+                return fun_ret(self.previous().line, None)
+            
+            return fun_ret(self.previous().line, self.comparison())
+            
         return self.expression()
          
 

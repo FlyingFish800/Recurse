@@ -58,11 +58,11 @@ if __name__ == "__main__":
                 l.tokenize(line)
                 line = f.readline()
 
-        print("Toks:", l.tokens)
+        #print("Toks:", l.tokens)
 
         ast = p.parse(l.tokens)
 
-        print(ast)
+        #print(ast)
 
         for exp in ast:
-            print(exp.interpret(i))
+            exp.interpret(i)
