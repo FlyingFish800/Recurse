@@ -16,12 +16,14 @@ class lexemeType(Enum):
     GT = auto()
     LT = auto()
     COMMA = auto()
+    DOT = auto()
 
     # Two char
     EQUAL_EQUAL = auto()
     BANG_EQUAL = auto()
     LT_EQUAL = auto()
     GT_EQUAL = auto()
+    DOT_DOT = auto()
 
     # Keywords
     IF = auto()
@@ -32,8 +34,8 @@ class lexemeType(Enum):
     NUMBER = auto()
     IDENTIFIER = auto()
 
-singletLexemeDict = {lexemeType.COMMA:",", lexemeType.PLUS:"+", lexemeType.MINUS:"-", lexemeType.PAREN_L:"(", lexemeType.PAREN_R:")", lexemeType.STAR:"*", lexemeType.SLASH:"/", lexemeType.COLON:":", lexemeType.SEMICOLON:";", lexemeType.BANG:"!", lexemeType.EQUAL:"=", lexemeType.LT:"<", lexemeType.GT:">"}
-doubletLexemeDict = {lexemeType.EQUAL_EQUAL:"==", lexemeType.BANG_EQUAL:"!=", lexemeType.LT_EQUAL:"<=", lexemeType.GT_EQUAL:">="}
+singletLexemeDict = {lexemeType.DOT:".", lexemeType.COMMA:",", lexemeType.PLUS:"+", lexemeType.MINUS:"-", lexemeType.PAREN_L:"(", lexemeType.PAREN_R:")", lexemeType.STAR:"*", lexemeType.SLASH:"/", lexemeType.COLON:":", lexemeType.SEMICOLON:";", lexemeType.BANG:"!", lexemeType.EQUAL:"=", lexemeType.LT:"<", lexemeType.GT:">"}
+doubletLexemeDict = {lexemeType.DOT_DOT:"..", lexemeType.EQUAL_EQUAL:"==", lexemeType.BANG_EQUAL:"!=", lexemeType.LT_EQUAL:"<=", lexemeType.GT_EQUAL:">="}
 keywordLexemeDict = {lexemeType.IF:"if", lexemeType.FUN:"fun", lexemeType.RET:"ret"}
 
 # Each token, has a type and value

@@ -289,6 +289,7 @@ class parser:
     def primary(self):
         if self.done():
             print("ERROR: Ran out of tokens")
+            exit(1)
 
         if self.match((lexer.lexemeType.NUMBER)):
             return number(self.previous().line, self.previous().value)
@@ -296,7 +297,7 @@ class parser:
         if self.match((lexer.lexemeType.IDENTIFIER)):
             name = self.previous().value
 
-            if self.match((lexer.lexemeType.PAREN_L)):
+            if not self.done() and self.match((lexer.lexemeType.PAREN_L)):
                 args = []
                 while not self.match((lexer.lexemeType.PAREN_R)):
                     args.append(self.comparison())
@@ -319,6 +320,9 @@ class parser:
             
             return epxression
         
+        print(f"ERROR: Unhandled lexeme {self.tokens[self.current].type} on line {self.tokens[self.current].line}")
+        exit(1)
+        
     # A line of recurse
     def statement(self):
         if self.done():
@@ -328,7 +332,7 @@ class parser:
         # Assignment
         if self.match((lexer.lexemeType.IDENTIFIER)):
             left = identifier(self.previous().line, self.previous().value)
-            if self.match((lexer.lexemeType.EQUAL)):
+            if not self.done() and self.match((lexer.lexemeType.EQUAL)):
                 op = self.previous()
                 right = self.statement()
                 return assignment(self.previous().line, left.val, right)
