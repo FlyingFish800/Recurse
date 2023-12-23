@@ -1,0 +1,14 @@
+fun fizzbuzz i:
+    if i%3 == 0: print(i) ;
+    if i > 0: fizzbuzz(i-1) ;
+;
+
+fun one : ret 1 ;
+
+fun fibbonacci n:
+    if n == 0: ret 0 ;
+    if n == 1: ret 1 ;
+    ret fibbonacci(n-1) + fibbonacci(n-2)
+;
+
+print(fibbonacci(3))

@@ -35,8 +35,10 @@ class binary(node):
             return (int) (self.left.interpret(i) > self.right.interpret(i))
         elif self.op.type == lexer.lexemeType.LT:
             return (int) (self.left.interpret(i) < self.right.interpret(i))
+        elif self.op.type == lexer.lexemeType.PCT:
+            return self.left.interpret(i) % self.right.interpret(i)
         else: 
-            print(f"ERROR: Unimplemented unary operation {self.op}")
+            print(f"ERROR: Unimplemented binary operation {self.op}")
             exit(1)
 
     def __str__(self):
@@ -100,6 +102,22 @@ class identifier(node):
     def __repr__(self):
         return str(self)
     
+# Declaration of the use of a global variable
+class glob(node):
+    def __init__(self, line, name):
+        super().__init__(line)
+        self.name = name
+
+    # Evaluate in interpreter mode
+    def interpret(self, i):
+        i.register_global(self.name)
+
+    def __str__(self):
+        return f"glob {self.name}"
+    
+    def __repr__(self):
+        return str(self)
+    
 # Assignment of variable
 class assignment(node):
     def __init__(self, line, name, val):
@@ -131,11 +149,13 @@ class if_stmt(node):
         condition = self.cond.interpret(i)
         if condition:
             for line in self.body:
-                line.interpret(i)
+                val = line.interpret(i)
+                if type(line) == fun_ret:
+                    return val
 
     def __str__(self):
         nl = "\n"
-        return f"if {self.cond} : \n{nl.join(self.body)} \n;"
+        return f"if {str(self.cond)} : \n{nl.join(list(map(lambda x:str(x), self.body)))} \n;"
     
     def __repr__(self):
         return str(self)
@@ -169,7 +189,9 @@ class fun_call(node):
     # Evaluate in interpreter mode
     # Note that this ends up 
     def interpret(self, i):
-        i.invoke_fun(self.name, self.args)
+        ret = i.invoke_fun(self.name, self.args)
+        if self.name != "print": print("RETURNING", ret)
+        return ret
 
     def __str__(self):
         nl = "\n"
@@ -186,9 +208,7 @@ class fun_ret(node):
 
     # Evaluate in interpreter mode
     def interpret(self, i):
-        print(str(self))
-        print("TODO: Function returns")
-        exit(1)
+        return i.return_fun(self.val)
 
     def __str__(self):
         return f"ret {self.val}"
@@ -245,9 +265,20 @@ class parser:
     
     # Next highest priority structure, the comparison
     def comparison(self):
-        left = self.term()
+        left = self.modulo()
 
         while not self.done() and self.match((lexer.lexemeType.GT, lexer.lexemeType.LT, lexer.lexemeType.GT_EQUAL, lexer.lexemeType.LT_EQUAL)):
+            op = self.previous()
+            right = self.modulo()
+            left = binary(self.previous().line, left, op, right)
+
+        return left
+    
+    # modulus
+    def modulo(self):
+        left = self.term()
+
+        while not self.done() and self.match((lexer.lexemeType.PCT)):
             op = self.previous()
             right = self.term()
             left = binary(self.previous().line, left, op, right)
@@ -372,7 +403,7 @@ class parser:
                     print("ERROR: Function args must be identifiers")
                     exit(1)
                 
-                args.append(self.previous().value)
+                args.append(self.previous())
 
                 if self.match((lexer.lexemeType.COMMA)):
                     continue
@@ -387,15 +418,33 @@ class parser:
             while not self.match((lexer.lexemeType.SEMICOLON)) and not self.done():
                 body.append(self.statement())
                 
+            if len(body) == 0:
+                print(f"ERROR: Empty functions not allowed. '{name.value}' is empty on line {name.line}")
+                exit(1)
+
+            if type(body[-1]) != lexer.lexemeType.RET:
+                print(f"WARN: ret not found at the end of function '{name.value}', injecting 'ret' at last line")
+                body.append(fun_ret(self.previous().line, None))
+
             return fun_declaration(name.line, name.value, args, body)
         
         # Function return
         if self.match((lexer.lexemeType.RET)):
             # If last token or next token is on different line, return 
-            if self.done() or self.tokens[self.current].line != self.previous().line:
+            ## TODO: Check not semicolon
+            if self.done() or self.tokens[self.current].line != self.previous().line or self.tokens[self.current].type == lexer.lexemeType.SEMICOLON:
                 return fun_ret(self.previous().line, None)
             
             return fun_ret(self.previous().line, self.comparison())
+        
+        # Global function declaration
+        if self.match((lexer.lexemeType.GLOB)):
+            if not self.done() and self.match((lexer.lexemeType.IDENTIFIER)):
+                return glob(self.previous().line, self.previous().value)
+            
+            print(f"ERROR: Incorrect use of global declaration 'glob' on line {self.previous().line}")
+            exit(1)
+            
             
         return self.expression()
          
