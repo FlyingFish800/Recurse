@@ -7,7 +7,7 @@ fun one : ret 1 ;
 
 fun fibbonacci n:
     if n == 0: ret 0 ;
-    if n == 1: ret 1 ;
+    else if n == 1: ret 1 ;
     ret fibbonacci(n-1) + fibbonacci(n-2)
 ;
 
@@ -20,4 +20,4 @@ if a == 0:
     print(2)
 ;
 
-print(fibbonacci(5))
+print(fibbonacci(30))

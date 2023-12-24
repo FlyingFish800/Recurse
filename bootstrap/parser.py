@@ -152,12 +152,12 @@ class if_stmt(node):
         if condition:
             for line in self.body:
                 val = line.interpret(i)
-                if type(line) == fun_ret:
+                if i.returned:
                     return val
         elif self.else_body != []:
             for line in self.else_body:
                 val = line.interpret(i)
-                if type(line) == fun_ret:
+                if i.returned:
                     return val
 
     def __str__(self):
