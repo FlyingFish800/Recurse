@@ -11,4 +11,13 @@ fun fibbonacci n:
     ret fibbonacci(n-1) + fibbonacci(n-2)
 ;
 
-print(fibbonacci(3))
+a = 0
+if a == 0:
+    print(0)
+; else if a == 1:
+    print(1)
+; else :
+    print(2)
+;
+
+print(fibbonacci(5))

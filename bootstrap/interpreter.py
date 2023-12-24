@@ -23,7 +23,7 @@ class interperter:
         if name in self.vars[-1][1]:
             level = 0
         
-        self.vars[level][0][name] = val.interpret(self)
+        self.vars[level][0][name] = val
 
     # Reference a variable to get its value
     def reference(self, name, line):
@@ -36,6 +36,7 @@ class interperter:
             print(f"ERROR: {'Global ' if level == 0 else ''}Variable '{name}' referenced before assignment on line {line} at depth {len(self.vars)}")
             exit(1)
 
+        if type(val) != int: val = val.interpret(self)
         return val
 
     # Define a function
@@ -57,7 +58,7 @@ class interperter:
                 print("Print only takes 1 arg")
                 exit(1)
 
-            print(args[0].interpret(self))
+            print(f"RECURSE: {args[0].interpret(self)} on line {args[0].line} at recursion level {len(self.vars)-1}")
             return
         
         if self.functions.get(name) == None:
@@ -85,7 +86,9 @@ class interperter:
             if self.returned: break
             current += 1
             if current >= len(body): break
-        print(ret)
+
+        self.returned = False
+        
         return ret
 
     # Return from a function

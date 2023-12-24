@@ -28,6 +28,7 @@ class lexemeType(Enum):
 
     # Keywords
     IF = auto()
+    ELSE = auto()
     FUN = auto()
     RET = auto()
     GLOB = auto()
@@ -38,7 +39,7 @@ class lexemeType(Enum):
 
 singletLexemeDict = {lexemeType.PCT:"%", lexemeType.DOT:".", lexemeType.COMMA:",", lexemeType.PLUS:"+", lexemeType.MINUS:"-", lexemeType.PAREN_L:"(", lexemeType.PAREN_R:")", lexemeType.STAR:"*", lexemeType.SLASH:"/", lexemeType.COLON:":", lexemeType.SEMICOLON:";", lexemeType.BANG:"!", lexemeType.EQUAL:"=", lexemeType.LT:"<", lexemeType.GT:">"}
 doubletLexemeDict = {lexemeType.DOT_DOT:"..", lexemeType.EQUAL_EQUAL:"==", lexemeType.BANG_EQUAL:"!=", lexemeType.LT_EQUAL:"<=", lexemeType.GT_EQUAL:">="}
-keywordLexemeDict = {lexemeType.GLOB:"glob", lexemeType.IF:"if", lexemeType.FUN:"fun", lexemeType.RET:"ret"}
+keywordLexemeDict = {lexemeType.GLOB:"glob", lexemeType.IF:"if", lexemeType.ELSE:"else", lexemeType.FUN:"fun", lexemeType.RET:"ret"}
 
 # Each token, has a type and value
 class lexeme:

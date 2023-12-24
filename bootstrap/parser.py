@@ -139,23 +139,30 @@ class assignment(node):
     
 # If statement
 class if_stmt(node):
-    def __init__(self, line, cond, body):
+    def __init__(self, line, cond, body, else_body):
         super().__init__(line)
         self.cond = cond
         self.body = body
+        self.else_body = else_body
 
     # Evaluate in interpreter mode
     def interpret(self, i):
         condition = self.cond.interpret(i)
+
         if condition:
             for line in self.body:
+                val = line.interpret(i)
+                if type(line) == fun_ret:
+                    return val
+        elif self.else_body != []:
+            for line in self.else_body:
                 val = line.interpret(i)
                 if type(line) == fun_ret:
                     return val
 
     def __str__(self):
         nl = "\n"
-        return f"if {str(self.cond)} : \n{nl.join(list(map(lambda x:str(x), self.body)))} \n;"
+        return f"if {str(self.cond)} : \n{nl.join(list(map(lambda x:str(x), self.body)))}\n; else :\n{nl.join(list(map(lambda x:str(x), self.else_body)))}\n; "
     
     def __repr__(self):
         return str(self)
@@ -190,7 +197,7 @@ class fun_call(node):
     # Note that this ends up 
     def interpret(self, i):
         ret = i.invoke_fun(self.name, self.args)
-        if self.name != "print": print("RETURNING", ret)
+        #if self.name != "print": print("RETURNING", ret)
         return ret
 
     def __str__(self):
@@ -383,10 +390,32 @@ class parser:
                 print("ERROR: No colon")
 
             body = []
-            while not self.match((lexer.lexemeType.SEMICOLON)) and not self.done():
+            while not self.match((lexer.lexemeType.SEMICOLON)):
                 body.append(self.statement())
 
-            return if_stmt(self.previous().line, cond, body)
+                if self.done():
+                    print(f"ERROR: If block not closed on line {cond.line}")
+                    exit(1)
+
+            # Else block exists
+            else_body = []
+            if not self.done() and self.match((lexer.lexemeType.ELSE)):
+                if self.done():
+                    print(f"ERROR: Expected block after else on line {self.previous().line}")
+                    exit(1)
+
+                # Else body
+                if self.match((lexer.lexemeType.COLON)):
+                    while not self.match((lexer.lexemeType.SEMICOLON)):
+                        else_body.append(self.statement())
+
+                        if self.done():
+                            print(f"ERROR: Else block not closed on line {cond.line}")
+                            exit(1)
+                else: else_body.append(self.statement())
+
+
+            return if_stmt(self.previous().line, cond, body, else_body)
 
         # Function declaration
         if self.match((lexer.lexemeType.FUN)):
@@ -422,7 +451,8 @@ class parser:
                 print(f"ERROR: Empty functions not allowed. '{name.value}' is empty on line {name.line}")
                 exit(1)
 
-            if type(body[-1]) != lexer.lexemeType.RET:
+            # Make sure every function returns
+            if type(body[-1]) != fun_ret:
                 print(f"WARN: ret not found at the end of function '{name.value}', injecting 'ret' at last line")
                 body.append(fun_ret(self.previous().line, None))
 
