@@ -454,7 +454,7 @@ class parser:
             # Make sure every function returns
             if type(body[-1]) != fun_ret:
                 print(f"WARN: ret not found at the end of function '{name.value}', injecting 'ret' at last line")
-                body.append(fun_ret(self.previous().line, None))
+                body.append(fun_ret(self.previous().line, number(self.previous().line, 0)))
 
             return fun_declaration(name.line, name.value, args, body)
         
