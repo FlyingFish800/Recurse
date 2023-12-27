@@ -1,6 +1,7 @@
 fun fizzbuzz i:
     if i%3 == 0: print(i) ;
     if i > 0: fizzbuzz(i-1) ;
+    ret
 ;
 
 fun one : ret 1 ;
@@ -9,6 +10,16 @@ fun fibbonacci n:
     if n == 0: ret 0 ;
     else if n == 1: ret 1 ;
     ret fibbonacci(n-1) + fibbonacci(n-2)
+;
+
+count = 0
+
+fun inc i :
+    if i <= 0 : ret ;
+    glob count
+    count = count + 1
+    inc(i-1)
+    ret
 ;
 
 a = 0
@@ -20,4 +31,9 @@ if a == 0:
     print(2)
 ;
 
+fizzbuzz(10)
 print(fibbonacci(30))
+
+print(count)
+inc(10)
+print(count)

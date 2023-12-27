@@ -463,7 +463,7 @@ class parser:
             # If last token or next token is on different line, return 
             ## TODO: Check not semicolon
             if self.done() or self.tokens[self.current].line != self.previous().line or self.tokens[self.current].type == lexer.lexemeType.SEMICOLON:
-                return fun_ret(self.previous().line, None)
+                return fun_ret(self.previous().line, number(self.previous().line, 0))
             
             return fun_ret(self.previous().line, self.comparison())
         
