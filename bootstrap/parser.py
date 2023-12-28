@@ -212,7 +212,7 @@ class fun_declaration(node):
 
     def __str__(self):
         nl = "\n"
-        return f"fun {self.cond} : \n{nl.join(self.body)} \n;"
+        return f"fun {self.name} {self.args}: \n{self.body} \n;"
     
     def __repr__(self):
         return str(self)
@@ -272,6 +272,22 @@ class deref(node):
     def __repr__(self):
         return str(self)
     
+# Dereference a pointer
+class variadic_recursion_arg(node):
+    def __init__(self, line):
+        super().__init__(line)
+
+    # Evaluate in interpreter mode
+    def interpret(self, i):
+        print("ERROR: UNimplement variad")
+        exit(1)
+
+    def __str__(self):
+        return f".."
+    
+    def __repr__(self):
+        return str(self)
+    
 # Contains a string literal
 class literal_string(node):
     def __init__(self, line, val):
@@ -290,6 +306,27 @@ class literal_string(node):
 
     def __str__(self):
         return f"\"{self.val}\""
+    
+    def __repr__(self):
+        return str(self)
+    
+# Contains an array literal
+class literal_array(node):
+    def __init__(self, line, val):
+        super().__init__(line)
+        self.val = val
+
+    # Evaluate in interpreter mode
+    def interpret(self, i):
+        addr = i.alloc_mem(len(self.val))
+
+        for offset, val in enumerate(self.val):
+            i.pointer_assignment(addr + offset, int(val))
+
+        return addr
+
+    def __str__(self):
+        return f"[{', '.join(self.val)}]"
     
     def __repr__(self):
         return str(self)
@@ -403,6 +440,9 @@ class parser:
         if self.match((lexer.lexemeType.STRING)):
             return literal_string(self.previous().line, self.previous().value)
 
+        if self.match((lexer.lexemeType.ARRAY)):
+            return literal_array(self.previous().line, self.previous().value)
+
         if self.match((lexer.lexemeType.NUMBER)):
             return number(self.previous().line, self.previous().value)
 
@@ -411,8 +451,18 @@ class parser:
 
             if not self.done() and self.match((lexer.lexemeType.PAREN_L)):
                 args = []
+                done = False
                 while not self.match((lexer.lexemeType.PAREN_R)):
-                    args.append(self.comparison())
+                    if done:
+                        print(f"ERROR: Arguments found after variadic recursion argment in {name} on line {self.previous().line}")
+                        exit(1)
+
+                    if self.match((lexer.lexemeType.DOT_DOT)):
+                        args.append(variadic_recursion_arg(self.previous().line))
+                        done = True
+                    else:
+                        args.append(self.comparison())
+                    
                     if self.match((lexer.lexemeType.PAREN_R)): break
                     elif self.match((lexer.lexemeType.COMMA)): continue
                     else:

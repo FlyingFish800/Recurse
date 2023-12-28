@@ -3,6 +3,7 @@
 # the interpreter
 
 import lexer
+import parser
 
 class interperter:
     # Array of variable contexts, 0 is globals and -1 is current context
@@ -96,6 +97,15 @@ class interperter:
             print(chr(args[0].interpret(self)), end="")
             return
         
+        if name == "printi":
+            if len(args) != 1:
+                print("ERROR: Print only takes 1 arg")
+                exit(1)
+
+            #print(f"RECURSE: {args[0].interpret(self)} on line {args[0].line} at recursion level {len(self.vars)-1}")
+            print((args[0].interpret(self)), end="")
+            return
+        
         if self.functions.get(name) == None:
             print(f"ERROR: Function '{name}' has not been declared")
             exit(1)
@@ -105,14 +115,45 @@ class interperter:
         #print("TODO: Variadic functions")
 
         fun_args, body = self.functions.get(name)
-        if len(args) != len(fun_args):
+        variadic = fun_args[-1].type == lexer.lexemeType.DOT_DOT
+
+        if len(args) != len(fun_args) and not variadic:
             print("ERROR: Call signature and function signature do not match: Length")
             print(f"{name}'s signature has {len(fun_args)} arguments, call has {len(args)} arguments, and is not variadic")
             exit(1)
+        elif len(args) < len(fun_args) - 1:
+            print("ERROR: Variadic functions need to have at least all static arguments satisfied")
+            print(f"{name} was called with {len(args)} arguments, needs at least {len(fun_args) - 1}")
+            exit(1)
 
-        # TODO:
-        # Should add args as local variables
-        self.vars.append(({str(name):value.interpret(self) for name, value in zip(fun_args, args)}, []))
+        dynamic_args = len(args) - len(fun_args) + 1
+        start = len(fun_args) - 1
+
+        variadic_recursion = False
+
+        if type(args[-1]) == parser.variadic_recursion_arg:
+            variadic_nargs = self.reference("nargs", args[-1].line)
+            variadic_args = self.reference("args", args[-1].line)
+            variadic_recursion = True
+
+        # Arguments are local variables
+        self.vars.append(({str(name):value.interpret(self) for name, value in zip(fun_args, args) if type(value) != parser.variadic_recursion_arg}, []))
+        if variadic and not variadic_recursion:
+            # Variadic has nargs (number of args) and args (array)
+            self.vars[-1][0]["nargs"] = dynamic_args
+
+            addr = self.alloc_mem(dynamic_args)
+            for i in range(dynamic_args):
+                self.pointer_assignment(addr + i, args[start + i].interpret(self))
+
+            self.vars[-1][0]["args"] = addr
+
+        if variadic and variadic_recursion:
+            self.vars[-1][0]["nargs"] = variadic_nargs
+            self.vars[-1][0]["args"] = variadic_args
+
+
+
 
         ret = 0
         current = 0

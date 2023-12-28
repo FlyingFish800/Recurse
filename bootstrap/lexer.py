@@ -37,6 +37,7 @@ class lexemeType(Enum):
     NUMBER = auto()
     IDENTIFIER = auto()
     STRING = auto()
+    ARRAY = auto()
 
 singletLexemeDict = {lexemeType.PCT:"%", lexemeType.DOT:".", lexemeType.COMMA:",", lexemeType.PLUS:"+", lexemeType.MINUS:"-", lexemeType.PAREN_L:"(", lexemeType.PAREN_R:")", lexemeType.STAR:"*", lexemeType.SLASH:"/", lexemeType.COLON:":", lexemeType.SEMICOLON:";", lexemeType.BANG:"!", lexemeType.EQUAL:"=", lexemeType.LT:"<", lexemeType.GT:">"}
 doubletLexemeDict = {lexemeType.DOT_DOT:"..", lexemeType.EQUAL_EQUAL:"==", lexemeType.BANG_EQUAL:"!=", lexemeType.LT_EQUAL:"<=", lexemeType.GT_EQUAL:">="}
@@ -68,6 +69,9 @@ class lexeme:
 
         if self.type == lexemeType.STRING:
             return f"\"{self.value}\""
+
+        if self.type == lexemeType.ARRAY:
+            return f"[{', '.join(self.value)}]"
         
         return f"{self.value}"
 
@@ -168,8 +172,18 @@ class lexer:
                 char = self.getc(line)
 
             return lexeme(self.line, lexemeType.STRING, "".join(value))
-
         
+        elif char == "[":
+            values = []
+
+            char = self.getc(line)
+            while char != "]":
+                if char.isnumeric():
+                    values.append(char)
+                char = self.getc(line)
+
+            return lexeme(self.line, lexemeType.ARRAY, values)
+
         else:
             # Otherwise it must be identifier
             id = []

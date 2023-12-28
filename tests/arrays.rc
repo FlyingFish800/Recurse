@@ -1,0 +1,20 @@
+a = [1,2,3,4]
+
+fun print_array n, ptr:
+    if n - 1 < 0: ret ;
+    printi(n)
+    print(32)
+    printi(*(ptr + n - 1))
+    print(10)
+    print_array(n-1, ptr)
+;
+
+fun variad a, ..:
+    if nargs <= 0: ret ;
+    printi(*(args + nargs - 1))
+    print(10)
+    nargs = nargs - 1
+    variad(a, ..)
+;
+
+variad(1,2,3,4,5)

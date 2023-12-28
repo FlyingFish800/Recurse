@@ -1,9 +1,9 @@
 a = "Hello World!"
 
-fun printf ptr:
+fun printf ptr, ..:
     if *ptr == 0: ret ;
     print(*ptr)
     printf(ptr + 1)
 ;
 
-printf(a)
+printf(a, 2, 4)
