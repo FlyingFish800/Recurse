@@ -14,8 +14,38 @@ class interperter:
 
     returned = False
 
+    memory = {}
+
     def __init__(self):
         pass
+
+    # Allocate <entries> sequential unsused memeory addresses
+    def alloc_mem (self, entries):
+        used = self.memory.keys()
+        addresses = list(range(entries))
+
+        # While addresses are in the used set, increment all addrs and try that
+        while used & addresses != set():
+            addresses = set([i+1 for i in addresses])
+
+        return min(addresses)
+
+    # Assign a variable to an expression
+    def pointer_assignment(self, addr, val):
+        if type(val) != int:
+            print(f"ERROR: (internal) memory adress can only be set to ints, not {type(val)}")
+            exit(1)
+
+        self.memory[addr] = val
+
+    # Assign a variable to an expression
+    def pointer_reference(self, addr):
+        val = self.memory.get(addr)
+        if val == None:
+            print(f"ERROR: (runtime) Memory address dereferenced before assignment")
+            exit(1)
+
+        return val
 
     # Assign a variable to an expression
     def assignment(self, name, val):
@@ -23,6 +53,7 @@ class interperter:
         if name in self.vars[-1][1]:
             level = 0
         
+        if type(val) != int: val = val.interpret(self)
         self.vars[level][0][name] = val
 
     # Reference a variable to get its value
@@ -33,10 +64,13 @@ class interperter:
 
         val = self.vars[level][0].get(name)
         if val == None:
-            print(f"ERROR: {'Global ' if level == 0 else ''}Variable '{name}' referenced before assignment on line {line} at depth {len(self.vars)}")
+            print(f"ERROR: {'Global ' if level == 0 else ''}Variable '{name}' referenced before assignment on line {line} at depth {len(self.vars) - 1}")
             exit(1)
 
-        if type(val) != int: val = val.interpret(self)
+        if type(val) != int: 
+            print(f"ERROR: (internal) variable {name} set to expression on line {line}")
+            exit(1)
+        
         return val
 
     # Define a function
@@ -55,10 +89,11 @@ class interperter:
     def invoke_fun(self, name, args):
         if name == "print":
             if len(args) != 1:
-                print("Print only takes 1 arg")
+                print("ERROR: Print only takes 1 arg")
                 exit(1)
 
-            print(f"RECURSE: {args[0].interpret(self)} on line {args[0].line} at recursion level {len(self.vars)-1}")
+            #print(f"RECURSE: {args[0].interpret(self)} on line {args[0].line} at recursion level {len(self.vars)-1}")
+            print(chr(args[0].interpret(self)), end="")
             return
         
         if self.functions.get(name) == None:

@@ -137,6 +137,37 @@ class assignment(node):
     def __repr__(self):
         return str(self)
     
+# Assignment of a pointer
+class ptr_assignment(node):
+    def __init__(self, line, ptr, val):
+        super().__init__(line)
+        self.ptr = ptr
+        self.val = val
+
+    # Evaluate in interpreter mode
+    def interpret(self, i):
+        if type(self.ptr.val) != str:
+            print("Multiple deref in assignment")
+            exit(1)
+
+        addr = i.reference(self.ptr.val, self.line)
+        val = self.val.interpret(i)
+        
+        i.pointer_assignment(addr, val)
+        return val
+
+    def __str__(self):
+        point = self.ptr
+        level = 0
+        while type(point) != str:
+            level += 1
+            point = point.val
+        
+        return f"{'*'*level}{point} = {self.val}"
+    
+    def __repr__(self):
+        return str(self)
+    
 # If statement
 class if_stmt(node):
     def __init__(self, line, cond, body, else_body):
@@ -202,7 +233,7 @@ class fun_call(node):
 
     def __str__(self):
         nl = "\n"
-        return f"{self.name}({', '.join(list(map(lambda x:str(x), self.args)))})"
+        return f"{self.name}<INVOKE>({', '.join(list(map(lambda x:str(x), self.args)))})"
     
     def __repr__(self):
         return str(self)
@@ -219,6 +250,46 @@ class fun_ret(node):
 
     def __str__(self):
         return f"ret {self.val}"
+    
+    def __repr__(self):
+        return str(self)
+    
+# Dereference a pointer
+class deref(node):
+    def __init__(self, line, val):
+        super().__init__(line)
+        self.val = val
+
+    # Evaluate in interpreter mode
+    def interpret(self, i):
+        addr = self.val.interpret(i)
+
+        return i.pointer_reference(addr)
+
+    def __str__(self):
+        return f"*({self.val})"
+    
+    def __repr__(self):
+        return str(self)
+    
+# Contains a string literal
+class literal_string(node):
+    def __init__(self, line, val):
+        super().__init__(line)
+        self.val = val
+
+    # Evaluate in interpreter mode
+    def interpret(self, i):
+        addr = i.alloc_mem(len(self.val) + 1)
+
+        for offset, char in enumerate(self.val):
+            i.pointer_assignment(addr + offset, ord(char))
+        i.pointer_assignment(addr + len(self.val), 0) # Null terminate
+
+        return addr
+
+    def __str__(self):
+        return f"\"{self.val}\""
     
     def __repr__(self):
         return str(self)
@@ -329,6 +400,9 @@ class parser:
             print("ERROR: Ran out of tokens")
             exit(1)
 
+        if self.match((lexer.lexemeType.STRING)):
+            return literal_string(self.previous().line, self.previous().value)
+
         if self.match((lexer.lexemeType.NUMBER)):
             return number(self.previous().line, self.previous().value)
 
@@ -358,6 +432,22 @@ class parser:
             
             return epxression
         
+        if self.match((lexer.lexemeType.STAR)):
+            dereferences = 1
+            while self.match((lexer.lexemeType.STAR)):
+                if self.done():
+                    print(f"ERROR: No identifier found in dereference on line {self.previous().line}")
+                    exit(1)
+                dereferences += 1
+            
+            prim = self.primary()
+
+            dereference = deref(self.previous().line, prim)
+            for i in range(dereferences - 1):
+                dereference = deref(self.previous().line, dereference)
+
+            return dereference
+        
         print(f"ERROR: Unhandled lexeme {self.tokens[self.current].type} on line {self.tokens[self.current].line}")
         exit(1)
         
@@ -366,6 +456,26 @@ class parser:
         if self.done():
             print("ERROR: No more tokens")
             exit(1)
+
+        # Dereferenceing a variable
+        if self.tokens[self.current].type == lexer.lexemeType.STAR:
+            dereference = self.primary()
+            if type(dereference) != deref:
+                print("ERROR: Not a deref")
+                exit(1)
+
+            if not self.done() and self.match((lexer.lexemeType.EQUAL)):
+                value = self.statement()
+                return ptr_assignment(dereference.line, dereference, value)
+            
+            # Not assignment, unparse the dereferencing
+            point = dereference
+            level = 0
+            while type(point) != str:
+                level += 1
+                point = point.val
+
+            self.current -= level + 1
 
         # Assignment
         if self.match((lexer.lexemeType.IDENTIFIER)):
@@ -426,12 +536,20 @@ class parser:
             name = self.previous()
             args = []
 
+            variadic = False
+
             # Get args if they exist
             while not self.match((lexer.lexemeType.COLON)):
-                if not self.match((lexer.lexemeType.IDENTIFIER)):
+                if variadic:
+                    print("ERROR: Variadic functions may not have any static args after variadic arg")
+                    exit(1)
+
+                if not self.match((lexer.lexemeType.IDENTIFIER)) and not self.match((lexer.lexemeType.DOT_DOT)):
                     print("ERROR: Function args must be identifiers")
                     exit(1)
                 
+                if self.previous().type == lexer.lexemeType.DOT_DOT:
+                    variadic = True
                 args.append(self.previous())
 
                 if self.match((lexer.lexemeType.COMMA)):

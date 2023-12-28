@@ -36,6 +36,7 @@ class lexemeType(Enum):
     # Unique
     NUMBER = auto()
     IDENTIFIER = auto()
+    STRING = auto()
 
 singletLexemeDict = {lexemeType.PCT:"%", lexemeType.DOT:".", lexemeType.COMMA:",", lexemeType.PLUS:"+", lexemeType.MINUS:"-", lexemeType.PAREN_L:"(", lexemeType.PAREN_R:")", lexemeType.STAR:"*", lexemeType.SLASH:"/", lexemeType.COLON:":", lexemeType.SEMICOLON:";", lexemeType.BANG:"!", lexemeType.EQUAL:"=", lexemeType.LT:"<", lexemeType.GT:">"}
 doubletLexemeDict = {lexemeType.DOT_DOT:"..", lexemeType.EQUAL_EQUAL:"==", lexemeType.BANG_EQUAL:"!=", lexemeType.LT_EQUAL:"<=", lexemeType.GT_EQUAL:">="}
@@ -64,6 +65,9 @@ class lexeme:
 
         char = keywordLexemeDict.get(self.type)
         if char != None: return f"{char}"
+
+        if self.type == lexemeType.STRING:
+            return f"\"{self.value}\""
         
         return f"{self.value}"
 
@@ -106,6 +110,12 @@ class lexer:
 
     # Get current, and advance to next
     def getc(self, line):
+        if self.done(line):
+            print(f"ERROR: Ran out of chars on line {self.line}")
+            print("Line:", line)
+            print("Tokens so far:")
+            print(self.tokens)
+
         char = line[self.current]
         self.current += 1
         return char
@@ -116,6 +126,8 @@ class lexer:
     # Get one token
     def getToken(self, line):
         self.skipWhitespace(line)
+        if self.current >= len(line):
+            return None
 
         # Try to handle as double char first
         char = self.getc(line)
@@ -146,6 +158,17 @@ class lexer:
                 char = self.getc(line)
 
             return lexeme(self.line, lexemeType.NUMBER, int("".join(number)))
+        
+        elif char == "\"":
+            value = []
+
+            char = self.getc(line)
+            while char != "\"":
+                value.append(char)
+                char = self.getc(line)
+
+            return lexeme(self.line, lexemeType.STRING, "".join(value))
+
         
         else:
             # Otherwise it must be identifier
