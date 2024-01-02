@@ -137,23 +137,25 @@ class interperter:
             variadic_recursion = True
 
         # Arguments are local variables
-        self.vars.append(({str(name):value.interpret(self) for name, value in zip(fun_args, args) if type(value) != parser.variadic_recursion_arg}, []))
+        locals = ({str(name):value.interpret(self) for name, value in zip(fun_args, args) if type(value) != parser.variadic_recursion_arg}, [])
         if variadic and not variadic_recursion:
             # Variadic has nargs (number of args) and args (array)
-            self.vars[-1][0]["nargs"] = dynamic_args
+            locals[0]["nargs"] = dynamic_args
 
+            # TODO: Check this out, validate it
             addr = self.alloc_mem(dynamic_args)
             for i in range(dynamic_args):
                 self.pointer_assignment(addr + i, args[start + i].interpret(self))
 
-            self.vars[-1][0]["args"] = addr
+            locals[0]["args"] = addr
 
         if variadic and variadic_recursion:
-            self.vars[-1][0]["nargs"] = variadic_nargs
-            self.vars[-1][0]["args"] = variadic_args
+            locals[0]["nargs"] = variadic_nargs
+            locals[0]["args"] = variadic_args
 
 
 
+        self.vars.append(locals)
 
         ret = 0
         current = 0

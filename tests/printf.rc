@@ -1,9 +1,31 @@
-a = "Hello World!"
+a = "Hello %s %s!"
+
+fun prints ptr :
+    if *ptr == 0 : ret ;
+    print(*ptr)
+    prints(ptr + 1)
+    ret
+;
 
 fun printf ptr, ..:
     if *ptr == 0: ret ;
-    print(*ptr)
-    printf(ptr + 1)
+
+    if *ptr == 37:
+        ptr = ptr + 1
+
+        if *ptr == 100:
+            printi(*args)
+            args = args + 1
+            nargs = nargs - 1
+        ; else if *ptr == 115 :
+            prints(*args)
+            args = args + 1
+            nargs = nargs - 1
+        ;
+    ; else print(*ptr)
+
+    printf(ptr + 1, ..)
+    ret
 ;
 
-printf(a, 2, 4)
+printf(a, "abcdefg", "ABCDEFG")
