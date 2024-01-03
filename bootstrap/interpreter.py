@@ -29,6 +29,9 @@ class interperter:
         while used & addresses != set():
             addresses = set([i+1 for i in addresses])
 
+        for addr in addresses:
+            self.memory[addr] = 0
+
         return min(addresses)
 
     # Assign a variable to an expression
@@ -42,6 +45,7 @@ class interperter:
     # Assign a variable to an expression
     def pointer_reference(self, addr):
         val = self.memory.get(addr)
+        #print(f"ACCESSED [{addr}]:{val}/{chr(val)}")
         if val == None:
             print(f"ERROR: (runtime) Memory address dereferenced before assignment")
             exit(1)
@@ -92,9 +96,12 @@ class interperter:
             if len(args) != 1:
                 print("ERROR: Print only takes 1 arg")
                 exit(1)
+            
+            #print("PRINT", chr(args[0].interpret(self)))
 
             #print(f"RECURSE: {args[0].interpret(self)} on line {args[0].line} at recursion level {len(self.vars)-1}")
-            print(chr(args[0].interpret(self)), end="")
+            val = chr(args[0].interpret(self))
+            print(val, end="")
             return
         
         if name == "printi":
@@ -137,7 +144,8 @@ class interperter:
             variadic_recursion = True
 
         # Arguments are local variables
-        locals = ({str(name):value.interpret(self) for name, value in zip(fun_args, args) if type(value) != parser.variadic_recursion_arg}, [])
+        locals = ({str(name):value.interpret(self) for name, value in zip(fun_args, args) if name.type != lexer.lexemeType.DOT_DOT}, [])
+        #if len(self.vars) == 1: print(locals)
         if variadic and not variadic_recursion:
             # Variadic has nargs (number of args) and args (array)
             locals[0]["nargs"] = dynamic_args

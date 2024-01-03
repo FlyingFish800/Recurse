@@ -302,7 +302,10 @@ class literal_string(node):
             i.pointer_assignment(addr + offset, ord(char))
         i.pointer_assignment(addr + len(self.val), 0) # Null terminate
 
-        print(f"{self.val}: {addr}:{len(self.val)}")
+        #print(f"{self.val} @ {addr}")
+        #for j in range(len(self.val) + 1):
+        #    print(f"{addr+j}: {(i.pointer_reference(addr+j))}/{chr(i.pointer_reference(addr+j))}")
+        #print(f"{self.val}: {addr}:{len(self.val)}")
         return addr
 
     def __str__(self):
