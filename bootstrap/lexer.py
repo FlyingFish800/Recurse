@@ -37,6 +37,7 @@ class lexemeType(Enum):
     NUMBER = auto()
     IDENTIFIER = auto()
     STRING = auto()
+    CHAR = auto()
     ARRAY = auto()
 
 singletLexemeDict = {lexemeType.PCT:"%", lexemeType.DOT:".", lexemeType.COMMA:",", lexemeType.PLUS:"+", lexemeType.MINUS:"-", lexemeType.PAREN_L:"(", lexemeType.PAREN_R:")", lexemeType.STAR:"*", lexemeType.SLASH:"/", lexemeType.COLON:":", lexemeType.SEMICOLON:";", lexemeType.BANG:"!", lexemeType.EQUAL:"=", lexemeType.LT:"<", lexemeType.GT:">"}
@@ -69,6 +70,9 @@ class lexeme:
 
         if self.type == lexemeType.STRING:
             return f"\"{self.value}\""
+
+        if self.type == lexemeType.CHAR:
+            return f"'{self.value}'"
 
         if self.type == lexemeType.ARRAY:
             return f"[{', '.join(self.value)}]"
@@ -172,6 +176,16 @@ class lexer:
                 char = self.getc(line)
 
             return lexeme(self.line, lexemeType.STRING, "".join(value))
+        
+        elif char == "'":
+            value = []
+
+            char = self.getc(line)
+            while char != "'":
+                value.append(char)
+                char = self.getc(line)
+
+            return lexeme(self.line, lexemeType.CHAR, "".join(value))
         
         elif char == "[":
             values = []
