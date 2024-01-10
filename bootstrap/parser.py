@@ -547,11 +547,12 @@ class parser:
             cond = self.expression()
 
             if self.done():
-                print("ERROR: Missing body of if statement")
+                print(f"ERROR: Missing body of if statement on line {cond.line}")
                 exit(1)
 
             if not self.match((lexer.lexemeType.COLON)):
-                print("ERROR: No colon")
+                print(f"ERROR: No colon in if statement on line {cond.line}")
+                exit(1)
 
             body = []
             while not self.match((lexer.lexemeType.SEMICOLON)):
