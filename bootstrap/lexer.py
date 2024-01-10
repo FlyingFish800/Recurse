@@ -91,15 +91,37 @@ class lexer:
 
     start_current = 0
 
+    # Whitespace chars
+    whitespace = (" ", "\t", "\n", "\r")
+
     def __init__(self):
         pass
 
     # Skip all whitespace chars
     def skipWhitespace(self, line):
-        whitespace = (" ", "\t", "\n", "\r")
-        
-        if line[self.current] == "\n": self.line += 1
-        if line[self.current] in whitespace: self.current += 1
+
+        while not self.done(line):
+            current = line[self.current]
+
+            # Stop if not whitespace or comment
+            if not current in self.whitespace and not current == "#":
+                break
+
+            if current == "#":
+                self.skipComments(line)
+
+            elif line[self.current] == "\n": 
+                self.line += 1
+            
+            elif line[self.current] in self.whitespace: 
+                self.current += 1
+
+    # Skip a comment. Pythonic comments
+    def skipComments(self, line):
+        if line[self.current] != '#': return
+
+        while not self.done(line) and line[self.current] != '\n': 
+            self.current += 1
 
     # Returns true if the char is a part of a single char token
     def isSinglet(self, char):

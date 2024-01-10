@@ -1,5 +1,6 @@
 a = "Hello %s %s!\n"
 
+# Helper function to print a null terminated string
 fun prints ptr :
     if *ptr == 0 : ret ;
     print(*ptr)
@@ -7,28 +8,36 @@ fun prints ptr :
     ret
 ;
 
+# Basic C-style printf function for a null terminated string
 fun printf ptr, ..:
     if *ptr == 0: ret ;
 
+    # Format entries start with %
     if *ptr == '%':
         ptr = ptr + 1
 
+        # %d prints an integer
         if *ptr == 'd':
             printi(*args)
             args = args + 1
             nargs = nargs - 1
         ; else if *ptr == 's' :
+            # %s prints a string
             prints(*args)
             args = args + 1
             nargs = nargs - 1
         ; else ptr = ptr - 1
+
     ; else if *ptr == '\' :
+        # \n prints a newline
         if *(ptr + 1) == 'n':
             ptr = ptr + 1
             print(10)
         ; else ptr = ptr - 1
+
     ; else print(*ptr)
 
+    # Recursively call with updated(remaining) variadic arguments
     printf(ptr + 1, ..)
     ret
 ;
