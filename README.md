@@ -44,6 +44,8 @@ This form of function definition is convenient to implement a function such as t
 
 ## Todos
 - [x] Comments
+- [x] Ability to call recurse code from python
+- [ ] Automated test cases!
 - [ ] Including libraries
 - [ ] Structs
 - [ ] Compilation

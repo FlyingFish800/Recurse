@@ -43,3 +43,4 @@ fun printf ptr, ..:
 ;
 
 printf(a, "abcdefg", "ABCDEFG")
+printf("Hello\n")

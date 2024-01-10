@@ -22,6 +22,9 @@ class interperter:
 
     # Allocate <entries> sequential unsused memeory addresses
     def alloc_mem (self, entries):
+        if entries == 0:
+            return 0
+
         used = self.memory.keys()
         addresses = list(range(entries))
 
