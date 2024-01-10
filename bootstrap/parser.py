@@ -341,9 +341,9 @@ class literal_char(node):
     def interpret(self, i):
 
         try:
-            value = ord(self.val)
+            value = ord(str(self.val))
         except TypeError:
-            print(f"ERROR: Expected char, found string {self.val} on line {self.line}")
+            print(f"ERROR: Expected char, found string \"{self.val}\" on line {self.line}")
             exit(1)
         
         return value
