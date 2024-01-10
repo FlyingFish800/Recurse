@@ -10,14 +10,14 @@ fun prints ptr :
 fun printf ptr, ..:
     if *ptr == 0: ret ;
 
-    if *ptr == 37:
+    if *ptr == '%':
         ptr = ptr + 1
 
-        if *ptr == 100:
+        if *ptr == 'd':
             printi(*args)
             args = args + 1
             nargs = nargs - 1
-        ; else if *ptr == 115 :
+        ; else if *ptr == 's' :
             prints(*args)
             args = args + 1
             nargs = nargs - 1

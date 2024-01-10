@@ -86,6 +86,23 @@ class number(node):
     def __repr__(self):
         return str(self)
 
+# C-like structure
+class struct(node):
+    def __init__(self, line, val):
+        super().__init__(line)
+        self.val = val
+
+    # Evaluate in interpreter mode
+    def interpret(self, i):
+        print("ERROR: Unimplemented")
+        exit(1)
+
+    def __str__(self):
+        return f"{self.val}"
+    
+    def __repr__(self):
+        return str(self)
+
 # Variables or function names
 class identifier(node):
     def __init__(self, line, val):
@@ -314,6 +331,29 @@ class literal_string(node):
     def __repr__(self):
         return str(self)
     
+# Contains a character literal
+class literal_char(node):
+    def __init__(self, line, val):
+        super().__init__(line)
+        self.val = val
+
+    # Evaluate in interpreter mode
+    def interpret(self, i):
+
+        try:
+            value = ord(self.val)
+        except TypeError:
+            print(f"ERROR: Expected char, found string {self.val} on line {self.line}")
+            exit(1)
+        
+        return value
+
+    def __str__(self):
+        return f"'{self.val}'"
+    
+    def __repr__(self):
+        return str(self)
+    
 # Contains an array literal
 class literal_array(node):
     def __init__(self, line, val):
@@ -443,6 +483,9 @@ class parser:
 
         if self.match((lexer.lexemeType.STRING)):
             return literal_string(self.previous().line, self.previous().value)
+
+        if self.match((lexer.lexemeType.CHAR)):
+            return literal_char(self.previous().line, self.previous().value)
 
         if self.match((lexer.lexemeType.ARRAY)):
             return literal_array(self.previous().line, self.previous().value)
