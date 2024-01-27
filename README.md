@@ -40,7 +40,7 @@ fun name arg1, arg2, arg3:
     <body>
 ;
 ```
-This form of function definition is convenient to implement a function such as the C printf function, which is solved by variadic functions. These functions are defined with '..' as one of their arguments, and automatically turn any argument provided in the function call past the static arguments into an array. These can be accessed with the local variables 'args' as a pointer to the array, and 'nargs' to give the number of arguments in the array. Finally to pass these variadic arguments on to recursive calls, you can supply '..' as the final argument to the recursive call and it will provide the current, updated version of args and nargs to the recursive call. Again note that args and nargs are supplied to the recursive call as they exist at the point in time in which the call is made, and previous modifications to args or nargs will apply. An example can be seen in tests/printf.rc
+This form of function definition is convenient to implement a function such as the C printf function, which is solved by variadic functions. These functions are defined with '..' as their final argument, and automatically turn any argument provided in the function call past the static arguments into an array. These can be accessed with the local variables 'args' as a pointer to the array, and 'nargs' to give the number of arguments in the array. Finally to pass these variadic arguments on to recursive calls, you can supply '..' as the final argument to the recursive call and it will provide the current, updated version of args and nargs to the recursive call. Again note that args and nargs are supplied to the recursive call as they exist at the point in time in which the call is made, and previous modifications to args or nargs will apply. An example can be seen in tests/printf.rc
 
 ## Todos
 - [x] Comments
@@ -49,3 +49,4 @@ This form of function definition is convenient to implement a function such as t
 - [ ] Including libraries
 - [ ] Structs
 - [ ] Compilation
+- [ ] Would be cool to do JIT compilation with mmap and ctypes modules
