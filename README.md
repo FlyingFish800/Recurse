@@ -49,3 +49,4 @@ This form of function definition is convenient to implement a function such as t
 - [ ] Including libraries
 - [ ] Structs
 - [ ] Compilation
+- [ ] Would be cool to do JIT compilation with mmap and ctypes modules

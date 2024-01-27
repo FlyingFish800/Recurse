@@ -38,7 +38,7 @@ class Recurse:
         self.l.reset()
         self.p.reset()
 
-        recurse = f"{function_name}({', '.join(args)})"
+        recurse = f"{function_name}({', '.join([str(arg) for arg in args])})"
         self.l.tokenize(recurse)
         ast = self.p.parse(self.l.tokens)
         return ast[0].interpret(self.state)
