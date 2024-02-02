@@ -1,0 +1,9 @@
+fun test_one : ret 1 ;
+
+fun test_two : ret 1 + 1 ;
+
+fun test_three n:
+    if n == 0: ret 0 ;
+    else if n == 1: ret 1 ;
+    ret fibbonacci(n-1) + fibbonacci(n-2)
+;

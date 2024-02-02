@@ -48,5 +48,6 @@ This form of function definition is convenient to implement a function such as t
 - [ ] Automated test cases!
 - [ ] Including libraries
 - [ ] Structs
+- [ ] Multiple warnings (Seek to next valid line after error and keep reporting, then abort)
 - [ ] Compilation
 - [ ] Would be cool to do JIT compilation with mmap and ctypes modules

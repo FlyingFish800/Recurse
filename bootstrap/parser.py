@@ -22,7 +22,10 @@ class binary(node):
         elif self.op.type == lexer.lexemeType.STAR:
             return self.left.interpret(i) * self.right.interpret(i)
         elif self.op.type == lexer.lexemeType.SLASH:
-            return self.left.interpret(i) + self.right.interpret(i)
+            if self.right.interpret(i) == 0: 
+                print(f"ERROR: Divide by zero")
+                exit(1)
+            return int(self.left.interpret(i) / self.right.interpret(i))
         elif self.op.type == lexer.lexemeType.EQUAL_EQUAL:
             return (int) (self.left.interpret(i) == self.right.interpret(i))
         elif self.op.type == lexer.lexemeType.BANG_EQUAL:

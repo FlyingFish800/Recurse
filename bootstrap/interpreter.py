@@ -186,3 +186,9 @@ class interperter:
         self.vars.pop()
         self.returned = True
         return val
+    
+    def reset(self):
+        self.vars = [({}, [])]
+        self.functions = {}
+        self.returned = False
+        self.memory = {}
