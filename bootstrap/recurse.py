@@ -42,6 +42,11 @@ class Recurse:
         self.l.tokenize(recurse)
         ast = self.p.parse(self.l.tokens)
         return ast[0].interpret(self.state)
+    
+    def reset(self):
+        self.l.reset()
+        self.p.reset()
+        self.state.reset()
 
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser(
