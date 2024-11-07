@@ -1,4 +1,4 @@
-import lexer
+import bootstrap.lexer as lexer
 
 class node:
     line = 0

@@ -1,9 +1,12 @@
+# Tests constants
 fun test_one : ret 1 ;
 
+# Tests addition
 fun test_two : ret 1 + 1 ;
 
+# Tests recursion, and if statements
 fun test_three n:
     if n == 0: ret 0 ;
     else if n == 1: ret 1 ;
-    ret fibbonacci(n-1) + fibbonacci(n-2)
+    ret test_three(n-1) + test_three(n-2)
 ;

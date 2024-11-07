@@ -2,8 +2,8 @@
 # Contains the interpreter class, which holds the global state of
 # the interpreter
 
-import lexer
-import parser
+import bootstrap.lexer as lexer
+import bootstrap.parser as parser
 
 class interperter:
     # Array of variable contexts, 0 is globals and -1 is current context
@@ -43,12 +43,13 @@ class interperter:
             print(f"ERROR: (internal) memory adress can only be set to ints, not {type(val)}")
             exit(1)
 
+        # print(f"Setting addr[{addr}] = {val}")
         self.memory[addr] = val
 
     # Assign a variable to an expression
     def pointer_reference(self, addr):
         val = self.memory.get(addr)
-        #print(f"ACCESSED [{addr}]:{val}/{chr(val)}")
+        # print(f"ACCESSED [{addr}]:{val}/{chr(val)}")
         if val == None:
             print(f"ERROR: (runtime) Memory address dereferenced before assignment")
             exit(1)
@@ -125,7 +126,10 @@ class interperter:
         #print("TODO: Variadic functions")
 
         fun_args, body = self.functions.get(name)
-        variadic = fun_args[-1].type == lexer.lexemeType.DOT_DOT
+
+        if len(fun_args) > 0:
+            variadic = fun_args[-1].type == lexer.lexemeType.DOT_DOT
+        else: variadic = False
 
         if len(args) != len(fun_args) and not variadic:
             print("ERROR: Call signature and function signature do not match: Length")
@@ -141,7 +145,7 @@ class interperter:
 
         variadic_recursion = False
 
-        if type(args[-1]) == parser.variadic_recursion_arg:
+        if len(fun_args) > 0 and type(args[-1]) == parser.variadic_recursion_arg:
             variadic_nargs = self.reference("nargs", args[-1].line)
             variadic_args = self.reference("args", args[-1].line)
             variadic_recursion = True

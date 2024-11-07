@@ -10,7 +10,11 @@ fun print_array n, ptr:
 ;
 
 fun variad a, ..:
-    if nargs <= 0: ret ;
+    if nargs <= 0: 
+        printi(a)
+        print(10)
+        ret 
+    ;
     printi(*(args + nargs - 1))
     print(10)
     nargs = nargs - 1
@@ -18,3 +22,4 @@ fun variad a, ..:
 ;
 
 variad(1,2,3,4,5)
+print_array(4, a)

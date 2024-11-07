@@ -1,7 +1,7 @@
 import argparse
-import lexer
-import parser
-import interpreter
+import bootstrap.lexer as lexer
+import bootstrap.parser as parser
+import bootstrap.interpreter as interpreter
 
 class Recurse:
     state = None
